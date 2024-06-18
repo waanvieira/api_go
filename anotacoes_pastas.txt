@@ -1,0 +1,24 @@
+Pastas
+
+Link do projeto base https://github.com/golang-standards/project-layout
+
+api - Onde guardamos as nossas especificacoes das nossas apis, por exemplo documentação do swagger
+
+CMD - Onde fica a nossa aplicação, onde fica o gorun
+
+Internal - Onde fica as nossas soluções da nossa aplicação que não são compartilhadas
+
+PKG - Onde fica as nossas coisas compartilhadas, onde fica os nossos arquivos generico
+
+configs - onde fica  as nossas configurações de como nosso projeto vai iniciar, padrões das nossas configurações
+
+test - onde fica os nossos adicionais de testes, os nossos testes geralmente ficam juntos ao codigo
+
+
+
+
+############ TESTES
+
+Para rodar todos os testes
+
+go test ./...
