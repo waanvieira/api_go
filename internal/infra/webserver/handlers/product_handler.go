@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/waanvieira/api-users/internal/dto"
 	"github.com/waanvieira/api-users/internal/entity"
 	"github.com/waanvieira/api-users/internal/infra/database"
@@ -62,4 +63,51 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *ProductHandler) FindByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	p, err := h.ProductDB.FindByID(id)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Registro não encontrado"))
+		return
+	}
+
+	json.NewEncoder(w).Encode(p)
+}
+
+func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
+	// filter := chi.URLParam(r, "filter")
+	p, err := h.ProductDB.FindAll(1, 10, "desc")
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Registro não encontrado"))
+		return
+	}
+
+	json.NewEncoder(w).Encode(p)
+}
+
+func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := h.ProductDB.Delete(id)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Registro não encontrado"))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte("Registro deletado com sucesso"))
 }
