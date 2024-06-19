@@ -8,9 +8,9 @@ type UserInterface interface {
 }
 
 type ProductInterface interface {
-	Create(user *entity.User) error
-	FindByID(email string) (*entity.User, error)
+	Create(product *entity.Product) error
+	FindByID(email string) (*entity.Product, error)
 	FindAll(page, limit int, sort string) ([]entity.Product, error)
-	Update(user *entity.User) error
+	Update(product *entity.Product) error
 	Delete(id string) error
 }
