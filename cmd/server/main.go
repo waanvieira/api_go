@@ -7,7 +7,8 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/waanvieira/api-users/configs"
 	"github.com/waanvieira/api-users/internal/entity"
-	database "github.com/waanvieira/api-users/internal/infra/database/product"
+	databaseUser "github.com/waanvieira/api-users/internal/infra/database"
+	databaseProduct "github.com/waanvieira/api-users/internal/infra/database/product"
 	"github.com/waanvieira/api-users/internal/infra/webserver/handlers"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -31,11 +32,15 @@ func main() {
 	r.Use(middleware.Logger)
 
 	// // Estamos iniciando a struct de "classe" indicando qual banco de dados vamos usar
-	productDB := database.NewProduct(db)
+	productDB := databaseProduct.NewProduct(db)
 	// Passamos a nossa "classe" concreta da nossa classe de manipulação de dados para o nosso handler (controller)
 	// fazer as tratativas criando a entidade e salvando no banco
 	produductHandler := handlers.NewProductHandler(productDB)
-	// // // Injetamos o nosso método "CreateProduct" quando bater na rota de products
+
+	userDB := databaseUser.NewUser(db)
+	userHandler := handlers.NewUserHandler(userDB)
+
+	// Injetamos o nosso método "CreateProduct" quando bater na rota de products
 	r.Route("/products", func(r chi.Router) {
 		r.Post("/", produductHandler.CreateProduct)
 		r.Get("/", produductHandler.GetAllProducts)
@@ -51,6 +56,11 @@ func main() {
 		// 	r.Delete("/", deleteArticle)                                    // DELETE /articles/123
 		// 	})
 
+	})
+
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/", userHandler.CreateUser)
+		r.Get("/{email}", userHandler.FindByEmail)
 	})
 
 	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {

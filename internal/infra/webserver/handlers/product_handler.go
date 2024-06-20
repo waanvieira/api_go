@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/waanvieira/api-users/internal/dto"
@@ -84,15 +85,27 @@ func (h *ProductHandler) FindByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
-	// filter := chi.URLParam(r, "filter")
-	p, err := h.ProductDB.FindAll(1, 10, "desc")
+	page := r.URL.Query().Get("page")
+	limit := r.URL.Query().Get("limit")
+	// Automaticamente quando recebemos parametros ele vem como string o pacote strconv é para converter string em number
+	pageInt, err := strconv.Atoi(page)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Registro não encontrado"))
-		return
+		pageInt = 0
+	}
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		limitInt = 0
 	}
 
-	json.NewEncoder(w).Encode(p)
+	sort := r.URL.Query().Get("sort")
+	products, err := h.ProductDB.FindAll(pageInt, limitInt, sort)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(products)
 }
 
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
@@ -142,6 +155,8 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	// Aqui atribuimos a variável como referencia porque o valor já foi setado anteriormente, aqui estamos basicamente atribuindo um novo valor ao err, se mudassemos o valor o nome da variável
+	// teriamos que indicar := que seria atribuição do valor na variável err
 	err = h.ProductDB.Update(&product)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
