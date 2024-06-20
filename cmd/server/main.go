@@ -40,7 +40,7 @@ func main() {
 		r.Post("/", produductHandler.CreateProduct)
 		r.Get("/", produductHandler.GetAllProducts)
 		r.Get("/{id}", produductHandler.FindByID)
-		// r.Put("/{id}", produductHandler.UpdateProduct)
+		r.Put("/{id}", produductHandler.UpdateProduct)
 		// userID := chi.URLParam(r, "userID")
 		r.Delete("/{id}", produductHandler.DeleteProduct)
 		// Subrouters:
