@@ -53,6 +53,8 @@ func main() {
 		// Middleware pega o nosso token e injeta no nosso contexto para poder pegar em qualquer rota, assim como fizemos no jwt
 		r.Use(jwtauth.Verifier(configs.TokenAuth))
 		// Esse middleware que vai verificar se o nosso token é valido, dentro do tempo certo entre outras validações
+		// Nesse caso todas as rotas dentro de /products estão com o middleware do JWT, se quisermos rotas sem jwt colocar fora
+		// Como é com as rotas de usuários
 		r.Use(jwtauth.Authenticator)
 		r.Post("/", produductHandler.CreateProduct)
 		r.Get("/", produductHandler.GetAllProducts)
