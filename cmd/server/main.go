@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/jwtauth"
 	"github.com/waanvieira/api-users/configs"
 	"github.com/waanvieira/api-users/internal/entity"
 	databaseUser "github.com/waanvieira/api-users/internal/infra/database"
@@ -16,7 +17,8 @@ import (
 
 func main() {
 	// iniciando as nossas config
-	_, err := configs.LoadConfig(".")
+	configs, err := configs.LoadConfig(".")
+
 	if err != nil {
 		panic("erro ao criar user")
 	}
@@ -29,7 +31,13 @@ func main() {
 	db.AutoMigrate(&entity.Product{}, &entity.User{})
 
 	r := chi.NewRouter()
+	// Cria logs em cada requisição
 	r.Use(middleware.Logger)
+	// Esse middleware serve para se der algum problema, algum panic no sistema o sistema continuar a execução e não parar
+	// No caso quando acontece algum erro inesperado, algum panico a nossa aplicação ficaria fora do ar
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.WithValue("jwt", configs.TokenAuth))
+	r.Use(middleware.WithValue("JwtExperesIn", configs.JwtExpiresIn))	
 
 	// // Estamos iniciando a struct de "classe" indicando qual banco de dados vamos usar
 	productDB := databaseProduct.NewProduct(db)
@@ -42,6 +50,10 @@ func main() {
 
 	// Injetamos o nosso método "CreateProduct" quando bater na rota de products
 	r.Route("/products", func(r chi.Router) {
+		// Middleware pega o nosso token e injeta no nosso contexto para poder pegar em qualquer rota, assim como fizemos no jwt
+		r.Use(jwtauth.Verifier(configs.TokenAuth))
+		// Esse middleware que vai verificar se o nosso token é valido, dentro do tempo certo entre outras validações
+		r.Use(jwtauth.Authenticator)
 		r.Post("/", produductHandler.CreateProduct)
 		r.Get("/", produductHandler.GetAllProducts)
 		r.Get("/{id}", produductHandler.FindByID)
@@ -60,11 +72,14 @@ func main() {
 
 	r.Route("/users", func(r chi.Router) {
 		r.Post("/", userHandler.CreateUser)
-		r.Get("/{email}", userHandler.FindByEmail)
+		// r.Get("/{email}", userHandler.FindByEmail)
+		r.Post("/generate_token", userHandler.GetJWT)
+
 	})
 
 	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Teste"))
 	})
-	http.ListenAndServe(":8000", r)
+
+	http.ListenAndServe(":8001", r)
 }

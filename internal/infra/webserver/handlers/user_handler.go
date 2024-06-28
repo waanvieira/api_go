@@ -3,9 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/jwtauth"
 	"github.com/waanvieira/api-users/internal/dto"
+	user_dto "github.com/waanvieira/api-users/internal/dto/users"
 	"github.com/waanvieira/api-users/internal/entity"
 	"github.com/waanvieira/api-users/internal/infra/database"
 )
@@ -20,6 +23,36 @@ func NewUserHandler(db database.UserInterface) *UserHandler {
 	return &UserHandler{
 		UserDB: db,
 	}
+}
+
+func (h *UserHandler) GetJWT(w http.ResponseWriter, r *http.Request) {
+	jwt := r.Context().Value("jwt").(*jwtauth.JWTAuth)
+	jwtExpiresIn := r.Context().Value("JwtExperesIn").(int)
+	var user user_dto.GetJWTInput
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	u, err := h.UserDB.FindByEmail(user.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		// err := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+	if !u.ValidatePassword(user.Password) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	_, tokenString, _ := jwt.Encode(map[string]interface{}{
+		"sub": u.ID.String(),
+		"exp": time.Now().Add(time.Second * time.Duration(jwtExpiresIn)).Unix(),
+	})
+	accessToken := user_dto.GetJWTOutput{AccessToken: tokenString}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(accessToken)
 }
 
 // Função que seria o nosso controller, recebe um request e retorna um response

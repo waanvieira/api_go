@@ -9,19 +9,21 @@ var cfg *conf
 
 type conf struct {
 	// mapstructure é um alias para resolver o problema de letra maiuscula e minuscula, deixando assim equivalente um ao outro no .env
-	DBDriver      string `mapstructure:DB_DRIVER`
-	DBHost        string `mapstructure:DB_HOST`
-	DBPort        string `mapstructure:DB_PORT`
-	DBUser        string `mapstructure:DB_USER`
-	DBPassword    string `mapstructure:DB_PASSWORD`
-	DBName        string `mapstructure:DB_NAME`
-	WebserverPort string `mapstructure:WEB_SERVER_PORT`
-	JWTSecret     string `mapstructure:JWT_SECRET`
-	JwtExpiresIn  int    `mapstructure:JWT_EXPIRESIN`
+	// Nunca esquecer de colocar "" entre o nome das variáveis do .env se não colocar não irá funcionar
+	DBDriver      string `mapstructure:"DB_DRIVER"`
+	DBHost        string `mapstructure:"DB_HOST"`
+	DBPort        string `mapstructure:"DB_PORT"`
+	DBUser        string `mapstructure:"DB_USER"`
+	DBPassword    string `mapstructure:"DB_PASSWORD"`
+	DBName        string `mapstructure:"DB_NAME"`
+	WebserverPort string `mapstructure:"WEB_SERVER_PORT"`
+	JWTSecret     string `mapstructure:"JWT_SECRET"`
+	JwtExpiresIn  int    `mapstructure:"JWT_EXPIRESIN"`
 	TokenAuth     *jwtauth.JWTAuth
 }
 
 func LoadConfig(path string) (*conf, error) {
+	var cfg *conf
 	viper.SetConfigName("app_config")
 	viper.SetConfigType("env")
 	viper.AddConfigPath(path)
