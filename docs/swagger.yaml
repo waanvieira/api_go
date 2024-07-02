@@ -1,0 +1,99 @@
+basePath: /
+definitions:
+  github_com_waanvieira_api-users_internal_dto.CreateUserInput:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  github_com_waanvieira_api-users_internal_dto_users.GetJWTInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  github_com_waanvieira_api-users_internal_dto_users.GetJWTOutput:
+    properties:
+      access_token:
+        type: string
+    type: object
+  internal_infra_webserver_handlers.Error:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8001
+info:
+  contact:
+    name: Wanderson Vieira
+  description: Product API with auhtentication
+  license:
+    name: W
+  termsOfService: http://swagger.io/terms/
+  title: Go Expert API Example
+  version: "1.0"
+paths:
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create user
+      parameters:
+      - description: user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_waanvieira_api-users_internal_dto.CreateUserInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_infra_webserver_handlers.Error'
+      summary: Create user
+      tags:
+      - users
+  /users/generate_token:
+    post:
+      consumes:
+      - application/json
+      description: Get a user JWT
+      parameters:
+      - description: user credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_waanvieira_api-users_internal_dto_users.GetJWTInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_waanvieira_api-users_internal_dto_users.GetJWTOutput'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_infra_webserver_handlers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_infra_webserver_handlers.Error'
+      summary: Get a user JWT
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
