@@ -13,6 +13,10 @@ import (
 	"github.com/waanvieira/api-users/internal/infra/database"
 )
 
+// Struct que representa como vamos retornar um erro caso tenha algum problema
+type Error struct {
+	Message string `json:"message"`
+}
 type UserHandler struct {
 	UserDB database.UserInterface
 }
@@ -25,6 +29,17 @@ func NewUserHandler(db database.UserInterface) *UserHandler {
 	}
 }
 
+// GetJWT godoc
+// @Summary      Get a user JWT
+// @Description  Get a user JWT
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        request   body     user_dto.GetJWTInput  true  "user credentials"
+// @Success      200  {object}  user_dto.GetJWTOutput
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /users/generate_token [post]
 func (h *UserHandler) GetJWT(w http.ResponseWriter, r *http.Request) {
 	jwt := r.Context().Value("jwt").(*jwtauth.JWTAuth)
 	jwtExpiresIn := r.Context().Value("JwtExperesIn").(int)
@@ -37,7 +52,7 @@ func (h *UserHandler) GetJWT(w http.ResponseWriter, r *http.Request) {
 	u, err := h.UserDB.FindByEmail(user.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		// err := Error{Message: err.Error()}
+		err := Error{Message: err.Error()}
 		json.NewEncoder(w).Encode(err)
 		return
 	}
@@ -55,6 +70,16 @@ func (h *UserHandler) GetJWT(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(accessToken)
 }
 
+// Create user godoc
+// @Summary      Create user
+// @Description  Create user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        request     body      dto.CreateUserInput  true  "user request"
+// @Success      201
+// @Failure      500         {object}  Error
+// @Router       /users [post]
 // Função que seria o nosso controller, recebe um request e retorna um response
 // Seria um método do nosso controler como store(Resquest $request) {//cadastra no banco de dados}
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -76,14 +101,15 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	u, err := entity.NewUser(user.Name, user.Email, user.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Erro para criar"))
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 	err = h.UserDB.Create(u)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Erro para salvar no banco"))
-
+		error := Error{Message: err.Error()}
+		json.NewEncoder(w).Encode(error)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
